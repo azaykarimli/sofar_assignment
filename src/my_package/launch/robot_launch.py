@@ -9,7 +9,8 @@ from webots_ros2_driver.webots_launcher import WebotsLauncher
 
 def generate_launch_description():
     package_dir = get_package_share_directory('my_package')
-    robot_description = pathlib.Path(os.path.join(package_dir, 'resource', 'my_robot.urdf')).read_text()
+    robot_description = pathlib.Path(os.path.join(
+        package_dir, 'resource', 'my_robot.urdf')).read_text()
 
     webots = WebotsLauncher(
         world=os.path.join(package_dir, 'worlds', 'my_world.wbt')
@@ -24,13 +25,20 @@ def generate_launch_description():
         ]
     )
 
+    obstacle_avoider = Node(
+        package='my_package',
+        executable='obstacle_avoider',
+    )
+
     return LaunchDescription([
         webots,
         my_robot_driver,
+        obstacle_avoider,
         launch.actions.RegisterEventHandler(
             event_handler=launch.event_handlers.OnProcessExit(
                 target_action=webots,
-                on_exit=[launch.actions.EmitEvent(event=launch.events.Shutdown())],
+                on_exit=[launch.actions.EmitEvent(
+                    event=launch.events.Shutdown())],
             )
         )
     ])
