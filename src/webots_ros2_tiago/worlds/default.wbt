@@ -7,8 +7,8 @@ WorldInfo {
 }
 Viewpoint {
   fieldOfView 0.5
-  orientation 0.3179803094444856 0.038784817888461866 -0.9473036792428013 2.9187109824608912
-  position 27.15248440605859 6.083643329439582 22.02228189083543
+  orientation 0.20781525529547096 -0.8629041910248889 -0.4606616727905203 5.330870268648043
+  position -22.23983851184167 -9.588024273727571 26.53231532317326
   near 1
   follow "TIAGo Iron"
   followType "None"
@@ -671,6 +671,37 @@ TiagoIron {
   lidarSlot [
     Lidar {
       name "hokuyo"
+      horizontalResolution 660
+      fieldOfView 3.14
+      numberOfLayers 1
+      maxRange 6
+    }
+    Display {
+      width 800
+      height 600
+    }
+  ]
+}
+TiagoIron {
+  translation -0.962153 4.80117 0.235361
+  rotation -0.00636307889981467 -0.002646190735207035 0.9999762541688215 0.433
+  name "TIAGo Iron(1)"
+  controller "<extern>"
+  supervisor TRUE
+  cameraSlot [
+    DEF Camera Camera {
+      translation 0 0.5 0
+      rotation 0 -0.7071067811865475 0.7071067811865475 1.57
+      fieldOfView 0.6
+      width 800
+      height 600
+      zoom Zoom {
+      }
+    }
+  ]
+  lidarSlot [
+    Lidar {
+      name "hukoyu"
       horizontalResolution 660
       fieldOfView 3.14
       numberOfLayers 1

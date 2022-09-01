@@ -1,0 +1,5 @@
+float32 goal_destination
+---
+bool status
+---
+string remaining_dist

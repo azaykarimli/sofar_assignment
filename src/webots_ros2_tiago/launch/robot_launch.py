@@ -16,10 +16,11 @@
 
 """Launch Webots and the controller."""
 
+import sys
 import os
 import pathlib
 import launch
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions.path_join_substitution import PathJoinSubstitution
 from launch import LaunchDescription
@@ -31,18 +32,19 @@ from webots_ros2_driver.webots_launcher import WebotsLauncher
 
 
 def generate_launch_description():
+    
     optional_nodes = []
     package_dir = get_package_share_directory('webots_ros2_tiago')
     world = LaunchConfiguration('world')
     mode = LaunchConfiguration('mode')
-    use_rviz = LaunchConfiguration('rviz', default=False)
-    use_nav = LaunchConfiguration('nav', default=False)
-    use_slam = LaunchConfiguration('slam', default=False)
+    use_rviz = LaunchConfiguration('rviz', default=True)
+    use_nav = LaunchConfiguration('nav', default=True)
+    use_slam = LaunchConfiguration('slam', default=True)
     robot_description = pathlib.Path(os.path.join(package_dir, 'resource', 'tiago_webots.urdf')).read_text()
     ros2_control_params = os.path.join(package_dir, 'resource', 'ros2_control.yml')
     nav2_map = os.path.join(package_dir, 'resource', 'map.yaml')
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
-
+    
     webots = WebotsLauncher(
         world=PathJoinSubstitution([package_dir, 'worlds', world]),
         mode=mode
@@ -51,7 +53,7 @@ def generate_launch_description():
     controller_manager_timeout = ['--controller-manager-timeout', '50']
     controller_manager_prefix = 'python.exe' if os.name == 'nt' else ''
 
-    use_deprecated_spawner_py = 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] == 'foxy'
+    use_deprecated_spawner_py = 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] == 'galactic'
 
     diffdrive_controller_spawner = Node(
         package='controller_manager',
@@ -99,7 +101,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         output='screen',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'base_footprint'],
+        arguments=['1', '0', '0', '1', '0', '0', 'base_link', 'base_footprint'],
     )
 
     rviz_config = os.path.join(get_package_share_directory('webots_ros2_tiago'), 'resource', 'default.rviz')
@@ -131,6 +133,7 @@ def generate_launch_description():
         condition=launch.conditions.IfCondition(use_slam)
     )
 
+        
     return LaunchDescription([
         DeclareLaunchArgument(
             'world',
@@ -157,3 +160,5 @@ def generate_launch_description():
             )
         )
     ] + optional_nodes)
+       
+    
