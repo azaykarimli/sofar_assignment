@@ -31,7 +31,7 @@ from launch.actions import IncludeLaunchDescription
 from webots_ros2_driver.webots_launcher import WebotsLauncher
 
 
-PACKAGE_NAME = 'webots_ros2_tiago'
+PACKAGE_NAME = 'webot_tiagomulti'
 
 
 def generate_launch_description():
@@ -40,7 +40,7 @@ def generate_launch_description():
     tiago_iron_description = pathlib.Path(os.path.join(package_dir, 'resource', 'tiago_webots.urdf')).read_text()
     tiago_iron1_description = pathlib.Path(os.path.join(package_dir, 'resource', 'tiago_webots.urdf')).read_text()
     tiago_iron_control_params = os.path.join(package_dir, 'resource', 'ros2_control.yml')
-    tiago_iron1_control_params = os.path.join(package_dir, 'resource', 'ros2_control1.yml')
+    tiago_iron1_control_params = os.path.join(package_dir, 'resource', 'ros2_control.yml')
     world = LaunchConfiguration('world')
     mode = LaunchConfiguration('mode')
     use_rviz = LaunchConfiguration('rviz', default=True)
@@ -79,29 +79,32 @@ def generate_launch_description():
     if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] in ['humble', 'rolling']:
         mappings.append(('/diffdrive_controller/odom', '/odom'))
 
-    tiago_iron_driver = Node(
+    tiago_driver = Node(
         package='webots_ros2_driver',
         executable='driver',
         output='screen',
-        additional_env={'WEBOTS_ROBOT_NAME': 'tiago iron'},
+        additional_env={'WEBOTS_ROBOT_NAME': 'Tiago Webots'},
         namespace='tiago_iron',
         parameters=[
             {'robot_description': tiago_iron_description},
             {'use_sim_time': True},
+            {'set_robot_state_publisher': True},
             tiago_iron_control_params
-        ]
+        ],
+        remappings= mappings
     )
     tiago_iron1_driver = Node(
         package='webots_ros2_driver',
         executable='driver',
         output='screen',
-        additional_env={'WEBOTS_ROBOT_NAME': 'tiago iron(1)'},
-        namespace='tiago_iron(1)',
+        additional_env={'WEBOTS_ROBOT_NAME': 'Tiago Webots'},
+        namespace='tiago_iron1',
         parameters=[
             {'robot_description': tiago_iron1_description},
             {'use_sim_time': True},
             tiago_iron1_control_params
-        ]
+        ],
+        remappings= mappings
     )
 
     robot_state_publisher = Node(
@@ -120,7 +123,7 @@ def generate_launch_description():
         arguments=['1', '0', '0', '1', '0', '0', 'base_link', 'base_footprint'],
     )
 
-    rviz_config = os.path.join(get_package_share_directory('webots_ros2_tiago'), 'resource', 'default.rviz')
+    rviz_config = os.path.join(get_package_share_directory('webot_tiagomulti'), 'resource', 'default.rviz')
     rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -152,14 +155,14 @@ def generate_launch_description():
     # Control nodes
     tiagobot = Node(
         package=PACKAGE_NAME,
-        executable='tiago_iron',
+        executable='tiagobot',
         namespace='tiago_iron',
         output='screen'
     )
     tiagobot1 = Node(
         package=PACKAGE_NAME,
-        executable='tiago_iron1',
-        namespace='tiago_iron(1)',
+        executable='tiagobot1',
+        namespace='tiago_iron1',
         output='screen'
     )
 
@@ -167,7 +170,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world',
             default_value='default.wbt',
-            description='Choose one of the world files from `/webots_ros2_tiago/world` directory'
+            description='Choose one of the world files from `/webot_tiagomulti/world` directory'
         ),
         DeclareLaunchArgument(
             'mode',
@@ -183,7 +186,7 @@ def generate_launch_description():
         webots,
         tiagobot,
         tiagobot1,
-        tiago_iron_driver,
+        tiago_driver,
         tiago_iron1_driver,
         
         launch.actions.RegisterEventHandler(

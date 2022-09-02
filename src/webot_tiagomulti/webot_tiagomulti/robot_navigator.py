@@ -32,7 +32,7 @@ class TaskResult(Enum):
 class BehaviorNavigator(Node):
 
     def __init__(self):
-        super().__init__(node_name = 'basic navigator')
+        super().__init__(node_name = 'tiagobot1_controller')
         self.initial_pose = PoseStamped()
         self.inital_pose.header.frame_id = 'map'
         self.goal_handle = None
@@ -513,16 +513,6 @@ class BehaviorNavigator(Node):
         self.get_logger().debug(msg)
         return
 
-def main(args = None):
-    rclpy.init(args = args)
-
-    Navigation = BehaviorNavigator()
-    rclpy.spin(Navigation)
-    Navigation.destroy_node()
-    rclpy.shutdown()
-
-if __name__== '__main__':
-    main()
 
 
 
