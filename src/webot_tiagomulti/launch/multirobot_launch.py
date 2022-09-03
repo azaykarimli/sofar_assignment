@@ -64,7 +64,7 @@ def generate_launch_description():
         executable='spawner' if not use_deprecated_spawner_py else 'spawner.py',
         output='screen',
         prefix=controller_manager_prefix,
-        arguments=['diffdrive_controller'] + controller_manager_timeout,
+        arguments=['diffdrive_controller', '-c', 'tiago_iron/controller_manager'] + controller_manager_timeout,
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -72,9 +72,24 @@ def generate_launch_description():
         executable='spawner' if not use_deprecated_spawner_py else 'spawner.py',
         output='screen',
         prefix=controller_manager_prefix,
-        arguments=['joint_state_broadcaster'] + controller_manager_timeout,
+        arguments=['joint_state_broadcaster', '-c', 'tiago_iron/controller_manager'] + controller_manager_timeout,
     )
     
+    diffdrive_controller_spawner_ti1 = Node(
+        package='controller_manager',
+        executable='spawner' if not use_deprecated_spawner_py else 'spawner.py',
+        output='screen',
+        prefix=controller_manager_prefix,
+        arguments=['diffdrive_controller', '-c', 'tiago_iron1/controller_manager'] + controller_manager_timeout,
+    )
+
+    joint_state_broadcaster_spawner_ti1 = Node(
+        package='controller_manager',
+        executable='spawner' if not use_deprecated_spawner_py else 'spawner.py',
+        output='screen',
+        prefix=controller_manager_prefix,
+        arguments=['joint_state_broadcaster', '-c', 'tiago_iron1/controller_manager'] + controller_manager_timeout,
+    )
     mappings = [('/diffdrive_controller/cmd_vel_unstamped', '/cmd_vel')]
     if 'ROS_DISTRO' in os.environ and os.environ['ROS_DISTRO'] in ['humble', 'rolling']:
         mappings.append(('/diffdrive_controller/odom', '/odom'))
@@ -152,20 +167,6 @@ def generate_launch_description():
         condition=launch.conditions.IfCondition(use_slam)
     )
 
-    # Control nodes
-    tiagobot = Node(
-        package=PACKAGE_NAME,
-        executable='tiagobot',
-        namespace='tiago_iron',
-        output='screen'
-    )
-    tiagobot1 = Node(
-        package=PACKAGE_NAME,
-        executable='tiagobot1',
-        namespace='tiago_iron1',
-        output='screen'
-    )
-
     return launch.LaunchDescription([
         DeclareLaunchArgument(
             'world',
@@ -184,15 +185,15 @@ def generate_launch_description():
         slam_toolbox ,
         footprint_publisher,
         webots,
-        tiagobot,
-        tiagobot1,
         tiago_driver,
         tiago_iron1_driver,
+        diffdrive_controller_spawner_ti1,
+        joint_state_broadcaster_spawner_ti1,
         
         launch.actions.RegisterEventHandler(
             event_handler=launch.event_handlers.OnProcessExit(
                 target_action=webots,
                 on_exit=[launch.actions.EmitEvent(event=launch.events.Shutdown())],
             )
-        )
-    ])
+        )])
+    

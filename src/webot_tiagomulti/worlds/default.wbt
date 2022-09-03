@@ -654,6 +654,7 @@ OfficeChair {
 TiagoIron {
   translation 0.962153 -4.80117 0.235361
   rotation -0.006363227570975 -0.002646197037686 -0.999976253206104 0.78447116344273
+  name "tiago iron"
   controller "<extern>"
   supervisor TRUE
   cameraSlot [
@@ -685,7 +686,7 @@ TiagoIron {
 TiagoIron {
   translation -0.962153 4.80117 0.235361
   rotation -0.00636307889981467 -0.002646190735207035 0.9999762541688215 0.433
-  name "TIAGo Iron1"
+  name "tiago iron1"
   controller "<extern>"
   supervisor TRUE
   cameraSlot [
