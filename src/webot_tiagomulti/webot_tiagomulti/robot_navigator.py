@@ -12,12 +12,11 @@ from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import Point, Pose
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from lifecycle_msgs.srv import GetState
-from nav2_msgs.action import BackUp, Spin, ComputePathThroughPoses, ComputePathToPose, FollowPath,FollowWaypoints,NavigateThroughPoses, NavigateToPose, SmoothPath
+from nav2_msgs.action import BackUp, Spin, ComputePathThroughPoses, ComputePathToPose, FollowPath,FollowWaypoints,NavigateThroughPoses, NavigateToPose
 from nav2_msgs.srv import ClearCostmapAroundRobot, SaveMap, GetCostmap, LoadMap, ManageLifecycleNodes, ClearEntireCostmap
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
-from nav2_msgs.msg import Path, Odometry
 from std_srvs.srv import SetBool
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from std_msgs.msg import Empty as Emptymsg
@@ -34,7 +33,7 @@ class BehaviorNavigator(Node):
     def __init__(self):
         super().__init__(node_name = 'tiagobot1_controller')
         self.initial_pose = PoseStamped()
-        self.inital_pose.header.frame_id = 'map'
+        self.initial_pose.header.frame_id = 'map'
         self.goal_handle = None
         self.result_future = None
         self.feedback = None
@@ -53,10 +52,9 @@ class BehaviorNavigator(Node):
         self.follow_waypoints_client = ActionClient(self, FollowWaypoints, 'follow_waypoints')
         self.follow_path_client = ActionClient(self, FollowPath, 'follow_path')
         self.compute_path_to_pose_client = ActionClient(self, ComputePathToPose, 'compute_path_to_pose')
-        self.smoother_client = ActionClient(self, SmoothPath, 'smooth_path')
         self.spin_client = ActionClient(self, Spin, 'spin')
         self.backup_client = ActionClient(self, BackUp, 'backup')
-        self.localisation_pose_sub = self.create_subscription(PoseWithCovarianceStamped, 'amcl_pose', self._amclPoseCallbck, amcl_pose_qos)
+        self.localisation_pose_sub = self.create_subscription(PoseWithCovarianceStamped, 'amcl_pose', self._amclPoseCallback, amcl_pose_qos)
         self.initial_pose_sub = self.create_publisher(PoseWithCovarianceStamped, 'initialpose', 10)
         self.change_maps_srv = self.create_client(LoadMap, '/map_server/load_map')
         self.clear_costmap_global_srv = self.create_client(ClearEntireCostmap, '/global_costmap/clear_entirely_global_costmap')
@@ -312,36 +310,6 @@ class BehaviorNavigator(Node):
 
         if not self.goal_handle.accepted:
             self.error('Get path was rejected!')
-            return None
-
-        self.result_future = self.goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, self.result_future)
-        self.status = self.result_future.result().status
-        if self.status != GoalStatus.STATUS_SUCCEEDED:
-            self.warn(f'Getting path failed with status code: {self.status}')
-            return None
-
-        return self.result_future.result().result.path
-
-    def smoothPath(self, path, smoother_id='', max_duration=2.0, check_for_collision=False):
-        """Send a `SmoothPath` action request."""
-        self.debug("Waiting for 'SmoothPath' action server")
-        while not self.smoother_client.wait_for_server(timeout_sec=1.0):
-            self.info("'SmoothPath' action server not available, waiting...")
-
-        goal_msg = SmoothPath.Goal()
-        goal_msg.path = path
-        goal_msg.max_smoothing_duration = rclpyDuration(seconds=max_duration).to_msg()
-        goal_msg.smoother_id = smoother_id
-        goal_msg.check_for_collisions = check_for_collision
-
-        self.info('Smoothing path...')
-        send_goal_future = self.smoother_client.send_goal_async(goal_msg)
-        rclpy.spin_until_future_complete(self, send_goal_future)
-        self.goal_handle = send_goal_future.result()
-
-        if not self.goal_handle.accepted:
-            self.error('Smooth path was rejected!')
             return None
 
         self.result_future = self.goal_handle.get_result_async()

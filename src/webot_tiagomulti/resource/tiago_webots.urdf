@@ -11,7 +11,7 @@
             </ros>
         </device>
 
-        <plugin type="webots_ros2_control::Ros2Control" />
+        <plugin type="webots_ros2_control::Ros2ControlSystem" />
     </webots>
 
     <ros2_control name="WebotsControl" type="system">

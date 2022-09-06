@@ -17,8 +17,7 @@ from rcl_interfaces.msg import ParameterDescriptor,ParameterType
 from rclpy.executors import MultiThreadedExecutor
 from sensor_msgs.msg import Range, CameraInfo, JointState, LaserScan
 from threading import Thread
-from webot_tiagomulti.webot_tiagomulti import robot_navigator
-from robot_navigator import BehaviorNavigator, TaskResult
+from webot_tiagomulti.robot_navigator import BehaviorNavigator, TaskResult
 
 """ask user for input of coordinates"""
 """a user interface"""
@@ -61,7 +60,7 @@ class ControlTiago(Node):
         self.initial_pose.pose.orientation.w = 0.1
     def go_to_goal(self, x1, y1):
         goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'map'()
+        goal_pose.header.frame_id = 'map'
         goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
         goal_pose.pose.position.x = x1
         goal_pose.pose.position.y = y1
@@ -111,6 +110,17 @@ def main(args =None):
                 os._exit(1)
 if __name__=='__main__':
     main()
+
+
+    
+
+
+
+        
+
+
+
+
 
 
     

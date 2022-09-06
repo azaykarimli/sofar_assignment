@@ -1,20 +1,3 @@
-#!/usr/bin/env python
-
-# Copyright 1996-2021 Cyberbotics Ltd.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-"""Launch Webots and the controllers."""
 import sys
 import os
 import pathlib
@@ -23,6 +6,7 @@ from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch.substitutions.path_join_substitution import PathJoinSubstitution
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch_ros.actions.lifecycle_node import LifecycleNode
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory, get_packages_with_prefixes
 from webots_ros2_driver.webots_launcher import WebotsLauncher
@@ -32,8 +16,6 @@ from webots_ros2_driver.webots_launcher import WebotsLauncher
 
 
 PACKAGE_NAME = 'webot_tiagomulti'
-
-
 def generate_launch_description():
     optional_nodes = []
     package_dir = get_package_share_directory(PACKAGE_NAME)
@@ -50,6 +32,7 @@ def generate_launch_description():
     nav2_map = os.path.join(package_dir, 'resource', 'map.yaml')
     # Webots
     webots = WebotsLauncher(world=os.path.join(package_dir, 'worlds', 'default.wbt'))
+    mode=mode
 
     # Driver nodes
     # When having multiple robot it is enough to specify the `additional_env` argument.
@@ -98,7 +81,7 @@ def generate_launch_description():
         package='webots_ros2_driver',
         executable='driver',
         output='screen',
-        additional_env={'WEBOTS_ROBOT_NAME': 'Tiago Webots'},
+        additional_env={'WEBOTS_ROBOT_NAME': 'tiago iron'},
         namespace='tiago_iron',
         parameters=[
             {'robot_description': tiago_iron_description},
@@ -107,16 +90,39 @@ def generate_launch_description():
             tiago_iron_control_params
         ],
         remappings= mappings
+        
     )
+
+    tiago_controller = Node(
+        package= 'webot_tiagomulti',
+        namespace='tiago_iron',
+        executable='tiagobot',
+        name='tiago_iron',
+        parameters=[
+            {"robot_names": "tiago iron"},
+           ]
+       ),
+    
+    tiago1_controller = Node(
+        package= 'webot_tiagomulti',
+        namespace='tiago_iron1',
+        executable='tiagobot',
+        name='tiago_iron1',
+        parameters=[
+            {"robot_names": "tiago iron1"},
+           ]
+       ),
+    
     tiago_iron1_driver = Node(
         package='webots_ros2_driver',
         executable='driver',
         output='screen',
-        additional_env={'WEBOTS_ROBOT_NAME': 'Tiago Webots'},
+        additional_env={'WEBOTS_ROBOT_NAME': 'tiago iron1'},
         namespace='tiago_iron1',
         parameters=[
             {'robot_description': tiago_iron1_description},
             {'use_sim_time': True},
+            {'set_robot_state_publisher': True},
             tiago_iron1_control_params
         ],
         remappings= mappings
@@ -124,6 +130,17 @@ def generate_launch_description():
 
     robot_state_publisher = Node(
         package='robot_state_publisher',
+        namespace='tiago_iron',
+        executable='robot_state_publisher',
+        output='screen',
+        parameters=[{
+           'robot_description': '<robot name=""><link name=""/></robot>'
+        }],
+    )
+
+    robot_state_publisher = Node(
+        package='robot_state_publisher',
+        namespace='tiago_iron1',
         executable='robot_state_publisher',
         output='screen',
         parameters=[{
@@ -145,9 +162,26 @@ def generate_launch_description():
         output='screen',
         arguments=['--display-config=' + rviz_config],
         parameters=[{'use_sim_time': use_sim_time}],
-        condition=launch.conditions.IfCondition(use_rviz)
-    )
-
+        condition=launch.conditions.IfCondition(use_rviz),
+        remappings=[('/tf', 'tf'),
+                    ('/tf_static', 'tf_static'),
+                    ('/goal_pose', 'goal_pose'),
+                    ('/clicked_point', 'clicked_point'),
+                    ('/initialpose', 'initialpose'),])
+    
+    rviz1 = Node(
+        package='rviz2',
+        executable='rviz2',
+        output='screen',
+        arguments=['--display-config=' + rviz_config],
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=launch.conditions.IfCondition(use_rviz),
+        remappings=[('/tf', 'tf'),
+                    ('/tf_static', 'tf_static'),
+                    ('/goal_pose', 'goal_pose'),
+                    ('/clicked_point', 'clicked_point'),
+                    ('/initialpose', 'initialpose'),])
+    
     if 'nav2_bringup' in get_packages_with_prefixes():
         optional_nodes.append(IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(
@@ -162,6 +196,17 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
+        namespace='tiago_iron',
+        name='slam_toolbox',
+        output='screen',
+        condition=launch.conditions.IfCondition(use_slam)
+    )
+
+    slam_toolbox1 = Node(
+        parameters=[{'use_sim_time': use_sim_time}],
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        namespace='tiago_iron1',
         name='slam_toolbox',
         output='screen',
         condition=launch.conditions.IfCondition(use_slam)
@@ -181,6 +226,7 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         diffdrive_controller_spawner,
         rviz,
+        rviz1,
         robot_state_publisher,
         slam_toolbox ,
         footprint_publisher,
@@ -189,6 +235,9 @@ def generate_launch_description():
         tiago_iron1_driver,
         diffdrive_controller_spawner_ti1,
         joint_state_broadcaster_spawner_ti1,
+        tiago_controller,
+        tiago1_controller,
+        slam_toolbox1,
         
         launch.actions.RegisterEventHandler(
             event_handler=launch.event_handlers.OnProcessExit(
@@ -196,4 +245,3 @@ def generate_launch_description():
                 on_exit=[launch.actions.EmitEvent(event=launch.events.Shutdown())],
             )
         )])
-    
